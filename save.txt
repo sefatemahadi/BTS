@@ -1,0 +1,45 @@
+    for i in range(len(doc_lines)):
+        new_doc_line =[]
+        for j in range(len(doc_lines[i])):
+            if doc_lines[i][j] not in stopwords and len(doc_lines[i][j]) > 1:
+                new_doc_line.append(doc_lines[i][j])
+        doc_lines[i] =new_doc_line
+        for j in range(len(doc_lines[i])):
+            doc_lines[i][j] =parser.stemOfWord(doc_lines[i][j])
+        vocab.extend(doc_lines[i])
+
+    vocab =Counter(vocab)
+
+    #COLLECTING FEATURES
+
+    for i in range(len(doc_lines)):
+        lengths.append(len(doc_lines[i]))
+        # positions.append((1 / sqrt(i + 1)))
+        similar_words.append(common_words(tittle.split(), doc_lines[i]))
+        degrees.append(calculate_degree(doc_lines[i],doc_lines,i))
+        sen_freq.append(calculate_sentence_freq(doc_lines[i],vocab))
+
+    # print(len(degrees))
+    # #PRINTING DEGREES
+    # # for i in range(len(degrees)):
+    # #     print(i,degrees[i])
+    #
+    print()
+    for i in range(len(doc_lines)):
+        # print(doc_lines[i],lengths[i],positions[i],similar_words[i],degrees[i],sen_freq[i])
+        print(doc_lines[i])
+        print('length',lengths[i])
+        print('position',positions[i])
+        print('similar words',similar_words[i])
+        print('degrees',degrees[i])
+        print('sentence frequency',sen_freq[i])
+target_values =Counter(target_values)
+for key in target_values.keys():
+    print(key,target_values[key])
+
+    for i in range(len(doc_lines)):
+        features.append([lengths[i],positions[i],similar_words[i],degrees[i],sen_freq[i]])
+    for i in range(len(doc_lines)):
+        features.append([lengths[i],similar_words[i],degrees[i],sen_freq[i]])
+for f in features:
+    print(f[0],f[1],f[2],f[3])
