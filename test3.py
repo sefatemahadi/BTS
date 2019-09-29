@@ -5,9 +5,13 @@ from collections import Counter
 from math import log
 import os
 import numpy
+import operator
 from sklearn.preprocessing import StandardScaler
-# from keras.models import Sequential
-# from keras.layers import Dense
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
+from keras.models import Sequential
+from keras.layers import Dense
+from matplotlib import pyplot
 
 def common_words(tittle,sentence):
     counter =0
@@ -15,6 +19,13 @@ def common_words(tittle,sentence):
         if word in sentence:
             counter+=1
     return counter/len(sentence)
+
+def calculate_top_words(top_words,sentence):
+    count =0
+    for word in sentence:
+        if word in top_words:
+            count+=1
+    return count
 
 def countOne(arr):
     count =0
@@ -142,6 +153,7 @@ for file_index in range(1,201):
     similar_words =[]
     degrees =[]
     sen_freq =[]
+    keywords =[]
     vocab =[]
 
     for line in doc_lines:
@@ -149,50 +161,73 @@ for file_index in range(1,201):
 
     vocab =Counter(vocab)
 
+    sorted_x = sorted(vocab.items(), key=operator.itemgetter(1), reverse=True)
+
+    top_words =[]
+
+    for i in range(10):
+        top_words.append(sorted_x[i][0])
+
+    # print(top_words)
+
     #COLLECTING FEATURES
 
     for i in range(len(doc_lines)):
         lengths.append(len(doc_lines[i])/len(doc_lines))
-        # positions.append((1 / sqrt(i + 1)))
+        positions.append(1-(i/len(doc_lines)))
         similar_words.append(common_words(tittle, doc_lines[i]))
         degrees.append(calculate_degree(doc_lines[i],doc_lines,i))
         sen_freq.append(calculate_sentence_freq(doc_lines[i],vocab))
+        keywords.append(calculate_top_words(top_words,doc_lines[i]))
 
     for i in range(len(doc_lines)):
-        features.append([lengths[i],similar_words[i],degrees[i],sen_freq[i]])
+        features.append([lengths[i],positions[i],similar_words[i],degrees[i],sen_freq[i],keywords[i]])
 
-scalar =StandardScaler()
-features =scalar.fit_transform(features)
+# scalar =StandardScaler()
+# features =scalar.fit_transform(features)
+#
+# for feature in features:
+#     print(feature[0])
+#     print(feature[1])
+#     print(feature[2])
+#     print(feature[3])
+#     print(feature[4])
+#     print(feature[5])
+#     print()
+#
+# # CONVERTING TO NUMPY ARRAY
+#
+features =numpy.array(features)
+print(features.shape)
+target_values =numpy.array(target_values)
+print(target_values.shape)
 
-for feature in features:
-    print(feature[0])
-    print(feature[1])
-    print(feature[2])
-    print(feature[3])
-    print()
+# x_train,x_test,y_train,y_test =train_test_split(features,target_values,test_size=0.2,random_state=0)
 
-# CONVERTING TO NUMPY ARRAY
-#
-# features =numpy.array(features)
-# print(features.shape)
-# target_values =numpy.array(target_values)
-# print(target_values.shape)
-#
-# d =Counter(target_values)
-# for k in d.keys():
-#     print(k,d[k])
-#
-# #BUILDING THE MODEL
-#
+#BUILDING THE MODEL
+
 # model =Sequential()
-# model.add(Dense(input_dim=4,units=10,kernel_initializer='normal',activation='relu'))
+# model.add(Dense(input_dim=6,units=10,kernel_initializer='normal',activation='relu'))
 # # model.add(Dense(units=10,kernel_initializer='normal',activation='relu'))
+# model.add(Dense(units=32,kernel_initializer='normal',activation='relu'))
 # model.add(Dense(units=10,kernel_initializer='normal',activation='relu'))
 # model.add(Dense(units=4,kernel_initializer='normal',activation='relu'))
 # model.add(Dense(units=1,kernel_initializer='normal',activation='sigmoid'))
 #
 # model.compile(optimizer='adam',loss='binary_crossentropy',metrics=['accuracy'])
-# model.fit(features,target_values,batch_size=10,epochs=500)
+# history =model.fit(features,target_values,validation_data=(x_test,y_test),batch_size=10,epochs=1000)
+#
+# history_dict =history.history
+#
+# acc =history_dict['acc']
+# val_acc =history_dict['val_acc']
 #
 # model.save('model5.h5')
 # print('saved to disk')
+#
+# # learning curves of model accuracy
+# pyplot.plot(acc, label='train')
+# pyplot.plot(val_acc, label='test')
+# pyplot.legend()
+# pyplot.show()
+
