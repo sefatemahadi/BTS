@@ -9,6 +9,11 @@ from sklearn.preprocessing import StandardScaler
 from keras.models import Sequential
 from keras.layers import Dense
 
+def create_sentence_embedding_model():
+    embedding_length =100
+    latent_dimension =128
+    batch_size =64
+
 def create_model():
     model = Sequential()
     model.add(Dense(input_dim=5, units=10, kernel_initializer='normal', activation='relu'))
