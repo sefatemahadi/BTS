@@ -6,6 +6,7 @@ try:
     from keras.models import load_model
     from sklearn.preprocessing import StandardScaler
     import operator
+    import numpy
 except Exception as e:
     print(e)
 
@@ -50,7 +51,7 @@ def common_words(tittle,sentence):
 def calculate_degree(sentence,document,index):
     #print(sentence)
     degree =0
-    threshold =0.015
+    threshold =0.020
     similarities =[0]*len(document)
     for i in range(len(document)):
         try:
@@ -88,7 +89,7 @@ except Exception as e:
 texts =fp.readlines()
 fp.close()
 tittle =texts[0]
-texts =texts[1:]
+# texts =texts[1:]
 
 vocab =[]
 copy_texts =texts[:]
@@ -114,20 +115,23 @@ vocab =Counter(vocab)
 
 top_words =[]
 sorted_x = sorted(vocab.items(), key=operator.itemgetter(1), reverse=True)
-for i in range(15):
+for i in range(20):
     top_words.append(sorted_x[i][0])
 
 features =[]
 
 for i in range(len(texts)):
-    features.append([len(texts[i])/len(texts),common_words(tittle,texts[i]),calculate_degree(texts[i],texts,i),calculate_sentence_freq(texts[i],vocab),calculate_top_words(top_words,texts[i])])
+    features.append([len(texts[i])/len(texts),1-(i+1)/len(texts),common_words(tittle,texts[i]),calculate_degree(texts[i],texts,i),calculate_sentence_freq(texts[i],vocab),calculate_top_words(top_words,texts[i])])
 
-#features =numpy.array(features)
-# print(features)
+for f in features:
+    print(f[0],f[1],f[2],f[3],f[4],f[5])
+
+features =numpy.array(features)
+#print(features)
 scalar =StandardScaler()
 features =scalar.fit_transform(features)
 try:
-    model = load_model('model.h5')
+    model = load_model('model4.h5')
 except Exception as e:
     print(e)
 y =model.predict(features)

@@ -9,14 +9,10 @@ from sklearn.preprocessing import StandardScaler
 from keras.models import Sequential
 from keras.layers import Dense
 
-def create_sentence_embedding_model():
-    embedding_length =100
-    latent_dimension =128
-    batch_size =64
-
 def create_model():
     model = Sequential()
-    model.add(Dense(input_dim=5, units=10, kernel_initializer='normal', activation='relu'))
+    model.add(Dense(input_dim=6, units=10, kernel_initializer='normal', activation='relu'))
+    model.add(Dense(units=32, kernel_initializer='normal', activation='relu'))
     model.add(Dense(units=32, kernel_initializer='normal', activation='relu'))
     model.add(Dense(units=10, kernel_initializer='normal', activation='relu'))
     model.add(Dense(units=4, kernel_initializer='normal', activation='relu'))
@@ -28,18 +24,18 @@ def common_words(tittle,sentence):
     for word in tittle:
         if word in sentence:
             counter+=1
-    return counter/len(sentence)
+    return counter
 
 def calculate_top_words(top_words,sentence):
     count =0
     for word in sentence:
         if word in top_words:
             count+=1
-    return count/len(sentence)
+    return count
 
 def calculate_degree(sentence,document,index):
     degree =0
-    threshold =0.015
+    threshold =0.010
     similarities =[0]*len(document)
     for i in range(len(document)):
         try:
@@ -50,13 +46,13 @@ def calculate_degree(sentence,document,index):
     for i in range(len(document)):
         if similarities[i] >= threshold:
             degree+=1
-    return degree/len(sentence)
+    return degree
 
 def calculate_sentence_freq(sentence,vocab):
     total_freq =0
     for word in sentence:
         total_freq+=vocab[word]
-    return (total_freq-len(sentence))/len(sentence)
+    return total_freq-len(sentence)
 
 doc_path =os.getcwd()+'/Final_Dataset/Documents'
 sum_path =os.getcwd()+'/Final_Dataset/Summaries'
@@ -114,8 +110,8 @@ for file_index in range(1,201):
         for j in range(len(sum_lines[i])):
             sum_lines[i][j] =parser.stemOfWord(sum_lines[i][j])
 
-    tittle =doc_lines[0]
-    doc_lines =doc_lines[1:]
+    tittle =doc_lines[1]
+    #doc_lines =doc_lines[1:]
 
     targets =[0]*len(doc_lines)
 
@@ -132,6 +128,7 @@ for file_index in range(1,201):
     target_values.extend(targets)
 
     lengths =[]
+    positions =[]
     similar_words =[]
     degrees =[]
     sen_freq =[]
@@ -147,7 +144,7 @@ for file_index in range(1,201):
 
     top_words =[]
 
-    for i in range(15):
+    for i in range(20):
         top_words.append(sorted_x[i][0])
 
     # print(top_words)
@@ -155,14 +152,15 @@ for file_index in range(1,201):
     #COLLECTING FEATURES
 
     for i in range(len(doc_lines)):
-        lengths.append(len(doc_lines[i])/len(doc_lines))
+        lengths.append(len(doc_lines[i]))
+        positions.append(1-(i+1)/len(doc_lines))
         similar_words.append(common_words(tittle, doc_lines[i]))
         degrees.append(calculate_degree(doc_lines[i],doc_lines,i))
         sen_freq.append(calculate_sentence_freq(doc_lines[i],vocab))
         keywords.append(calculate_top_words(top_words,doc_lines[i]))
 
     for i in range(len(doc_lines)):
-        features.append([lengths[i],similar_words[i],degrees[i],sen_freq[i],keywords[i]])
+        features.append([lengths[i],positions[i],similar_words[i],degrees[i],sen_freq[i],keywords[i]])
 
 # CONVERTING TO NUMPY ARRAY
 
@@ -179,4 +177,4 @@ print("Crossed")
 model =create_model()
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 model.fit(features,target_values, batch_size=10, epochs=1000)
-model.save('model3.h5')
+model.save('model4.h5')
