@@ -77,121 +77,103 @@ def calculate_top_words(top_words,sentence):
             count+=1
     return count
 
-#model =load_model('model3.h5')
-# print('model is loaded')
-print('Place the input file in same directory and enter the file name with extension:')
-file_name =input()
-# fp =open('input.txt','r',encoding='utf-8')
-try:
-    fp = open(file_name, 'r', encoding='utf-8')
-except Exception as e:
-    print(e)
-texts =fp.readlines()
-fp.close()
-tittle =texts[0]
-# texts =texts[1:]
 
-vocab =[]
-copy_texts =texts[:]
-texts =pre_process(texts)
+def generate(file_name):
+    try:
+        fp = open(file_name, 'r', encoding='utf-8')
+    except Exception as e:
+        print(e)
+    texts = fp.readlines()
+    fp.close()
+    tittle = texts[0]
+    # texts =texts[1:]
 
-for char in chars_to_delete:
-    while True:
-        index =tittle.find(char)
-        if index == -1:
-            break
-        tittle =tittle[:index]+tittle[index+1:]
-tittle =tittle.split()
-for i in range(len(tittle)):
-    tittle[i] =parser.stemOfWord(tittle[i])
+    vocab = []
+    copy_texts = texts[:]
+    texts = pre_process(texts)
 
-for text in texts:
-    vocab.extend(text)
+    for char in chars_to_delete:
+        while True:
+            index = tittle.find(char)
+            if index == -1:
+                break
+            tittle = tittle[:index] + tittle[index + 1:]
+    tittle = tittle.split()
+    for i in range(len(tittle)):
+        tittle[i] = parser.stemOfWord(tittle[i])
 
-vocab =Counter(vocab)
+    for text in texts:
+        vocab.extend(text)
 
-# for text in texts:
-#     print(text)
+    vocab = Counter(vocab)
 
-top_words =[]
-sorted_x = sorted(vocab.items(), key=operator.itemgetter(1), reverse=True)
-for i in range(20):
-    top_words.append(sorted_x[i][0])
+    # for text in texts:
+    #     print(text)
 
-features =[]
+    top_words = []
+    sorted_x = sorted(vocab.items(), key=operator.itemgetter(1), reverse=True)
+    for i in range(20):
+        top_words.append(sorted_x[i][0])
 
-for i in range(len(texts)):
-    features.append([len(texts[i])/len(texts),1-(i+1)/len(texts),common_words(tittle,texts[i]),calculate_degree(texts[i],texts,i),calculate_sentence_freq(texts[i],vocab),calculate_top_words(top_words,texts[i])])
+    features = []
 
-for f in features:
-    print(f[0],f[1],f[2],f[3],f[4],f[5])
+    for i in range(len(texts)):
+        features.append([len(texts[i]) / len(texts), 1 - (i + 1) / len(texts), common_words(tittle, texts[i]),
+                         calculate_degree(texts[i], texts, i), calculate_sentence_freq(texts[i], vocab),
+                         calculate_top_words(top_words, texts[i])])
 
-features =numpy.array(features)
-#print(features)
-scalar =StandardScaler()
-features =scalar.fit_transform(features)
-try:
-    model = load_model('model4.h5')
-except Exception as e:
-    print(e)
-y =model.predict(features)
-#print(y)
+    features = numpy.array(features)
+    # print(features)
+    scalar = StandardScaler()
+    features = scalar.fit_transform(features)
+    try:
+        model = load_model('model4.h5')
+    except Exception as e:
+        print(e)
+    y = model.predict(features)
+    # print(y)
 
-textlines =[]
-for i in range(len(y)):
-   textlines.append(Textline(copy_texts[i],y[i],i))
-#
-# #WITHOUT PAGING
-#
-# textlines.sort(key=lambda ob:ob.value,reverse=True)
-# print(len(texts))
-# textlines =textlines[:int(len(texts)/3)]
-# textlines.sort(key=lambda ob:ob.index,reverse=False)
-#
-# print(copy_texts[0])
-# for t in textlines:
-#     print(t.value,t.line)
+    textlines = []
+    for i in range(len(y)):
+        textlines.append(Textline(copy_texts[i], y[i], i))
 
-#WITH PAGING
-# print(y)
-page_size =3
-import os
-print(os.getcwd())
-write_output =open('summary.txt','w',encoding='utf-8')
+    page_size = 3
+    import os
+    print(os.getcwd())
+    write_output = open('summary.txt', 'w', encoding='utf-8')
 
-def get_line(page,flag):
-    if flag:
-        #print(page[0].line)
-        write_output.write(page[0].line)
+    def get_line(page, flag):
+        if flag:
+            # print(page[0].line)
+            write_output.write(page[0].line)
+            write_output.write('\n')
+            return
+        max_value = -100
+        max_index = 0
+        for i in range(len(page)):
+            if page[i].value > max_value:
+                max_value = page[i].value
+                max_index = i
+        # print(page[max_index].line)
+        write_output.write(page[max_index].line)
         write_output.write('\n')
-        return
-    max_value =-100
-    max_index =0
-    for i in range(len(page)):
-        if page[i].value > max_value:
-            max_value =page[i].value
-            max_index =i
-    #print(page[max_index].line)
-    write_output.write(page[max_index].line)
-    write_output.write('\n')
-index =0
-if_first =True
-while True:
-    flag =False
-    page =[]
-    for i in range(page_size):
-        if index >= len(texts):
-            flag =True
+
+    index = 0
+    if_first = True
+    while True:
+        flag = False
+        page = []
+        for i in range(page_size):
+            if index >= len(texts):
+                flag = True
+                break
+            page.append(textlines[index])
+            index += 1
+        if len(page):
+            get_line(page, if_first)
+        if if_first:
+            if_first = False
+        if flag:
             break
-        page.append(textlines[index])
-        index+=1
-    if len(page):
-        get_line(page,if_first)
-    if if_first:
-        if_first =False
-    if flag:
-        break
-write_output.close()
-print('Check inside the directory.A text file named as summary.txt contains generated summary')
-while True:
-    continue
+    write_output.close()
+    return os.getcwd()+'/summary.txt'
