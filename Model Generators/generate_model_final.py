@@ -66,6 +66,7 @@ def create_sentence_embedding_model(sentences,num_words):
 
     model.fit([sentence_skip,sentence_befor,sentence_after],[np.expand_dims(sentence_befor,-1),np.expand_dims(sentence_after,-1)],\
               batch_size=batch_size,epochs=1000,validation_split=.12)
+	model.save('encoder.h5)
 
 
 def create_model():
