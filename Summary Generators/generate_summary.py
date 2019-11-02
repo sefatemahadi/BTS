@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 try:
-    from math import log
+    from math import log,ceil
     from collections import Counter
     from bangla_stemmer import RuleFileParser
     from keras.models import load_model
@@ -106,10 +106,6 @@ def generate(file_name):
         vocab.extend(text)
 
     vocab = Counter(vocab)
-
-    # for text in texts:
-    #     print(text)
-
     top_words = []
     sorted_x = sorted(vocab.items(), key=operator.itemgetter(1), reverse=True)
     for i in range(20):
@@ -131,22 +127,43 @@ def generate(file_name):
     except Exception as e:
         print(e)
     y = model.predict(features)
-    # print(y)
 
     textlines = []
     for i in range(len(y)):
         textlines.append(Textline(copy_texts[i], y[i], i))
 
+    copy_textlines =textlines[:]
+    copy_textlines.sort(key=lambda x:x.value,reverse=True)
+
+    #copy_textlines =copy_textlines[:int(len(copy_textlines)/3)+1]
+    copy_textlines =copy_textlines[:ceil(len(copy_textlines)/3)]
+    copy_textlines.sort(key=lambda x:x.index,reverse=False)
+
+    flag =False
+
+    for line in copy_textlines:
+        if not line.index:
+            flag =True
+    if flag == False:
+        copy_textlines.insert(0,textlines[0])
+        copy_textlines =copy_textlines[:len(copy_textlines)-1]
+
+    file =open('trad_summary.txt','w')
+
+    for i in range(len(copy_textlines)):
+        file.write(str(copy_textlines[i].index))
+        file.write('\n')
+    file.close()
+
     page_size = 3
     import os
-    print(os.getcwd())
-    write_output = open('summary.txt', 'w', encoding='utf-8')
+    write_output = open('page_summary.txt', 'w', encoding='utf-8')
 
     def get_line(page, flag):
         if flag:
-            # print(page[0].line)
-            write_output.write(page[0].line)
-            # write_output.write('\n')
+            #write_output.write(page[0].line)
+            write_output.write(str(page[0].index))
+            write_output.write('\n')
             return
         max_value = -100
         max_index = 0
@@ -155,8 +172,9 @@ def generate(file_name):
                 max_value = page[i].value
                 max_index = i
         # print(page[max_index].line)
-        write_output.write(page[max_index].line)
-        # write_output.write('\n')
+        #write_output.write(page[max_index].line)
+        write_output.write(str(page[max_index].index))
+        write_output.write('\n')
 
     index = 0
     if_first = True
@@ -176,4 +194,4 @@ def generate(file_name):
         if flag:
             break
     write_output.close()
-    return os.getcwd()+'/summary.txt'
+    #return os.getcwd()+'/page_summary.txt'
