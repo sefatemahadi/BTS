@@ -1,4 +1,5 @@
 বিশেষ দ্রষ্টব্যঃ 
+
 ১) Exe ফাইল টি ডাউনলোড করার জন্য Exe  ডিরেক্টরি এর ভিতরে যান এবং exe_google_drive_link.txt ফাইল এর ভিতরে থাকা লিংক থেকে ডাউনলোড করুন
 ২) উক্ত Exe ফাইল টি কেবল মাত্র লিনাক্স অপারেটিং সিস্টেম এর জন্য প্রযোজ্য, লিনাক্স command prompt এ ./bangla _text _summarization _exe _for _linux   command দিয়ে ফাইল টি run করুন
 
